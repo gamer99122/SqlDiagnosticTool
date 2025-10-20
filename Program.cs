@@ -74,7 +74,8 @@ void CheckMemoryUsage()
     string sql = @"
         SELECT 
             type, 
-            SUM(pages_kb)/1024 as memory_gb 
+            SUM(pages_kb)/1024.0 as memory_mb,
+            SUM(pages_kb)/1024.0/1024.0 as memory_gb
         FROM sys.dm_os_memory_clerks 
         WHERE type = 'MEMORYCLERK_XTP'
         GROUP BY type";
@@ -92,10 +93,12 @@ void CheckMemoryUsage()
                     while (reader.Read())
                     {
                         hasData = true;
+                        double memoryMb = Convert.ToDouble(reader["memory_mb"]);
                         double memoryGb = Convert.ToDouble(reader["memory_gb"]);
-                        Console.WriteLine("  XTP 記憶體使用: " + memoryGb.ToString("F2") + " GB");
 
-                        if (memoryGb > 1.0)
+                        Console.WriteLine($"  XTP 記憶體使用: {memoryGb:F2} GB ({memoryMb:F2} MB)");
+
+                        if (memoryGb > 10.0)
                         {
                             Console.WriteLine("  警告: XTP 記憶體使用量較高");
                         }
